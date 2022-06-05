@@ -1,7 +1,7 @@
 #include"Game.h"
 #include"tools.h"
 #include"display.h"
-#include"Case.h"
+#include"Box.h"
 #include"color.h"
 
 /*
@@ -9,52 +9,81 @@ This function look if board[i][j] exist and if board[i][j] is a bomb.
 If board[i][j] is a bomb or board[i][j] dosen't exist it's return 1 else it's return 0
 */
 
-int control(Case *board[], int i , int j , int size){	
+int control(Box *board[], int column , int line , int height , int width){	
 	
-	if(i < 0 || i > size-1 || j < 0 || j > size-1){
+	if(column < 0 || column > width-1 || line < 0 || line > height-1){
 	
 		return 1;
 	} 
 	
 	else{
-		if(board[i][j].item == 9){
+		if(board[column][line].item == 9){
 			return 1;
 		}
-		else if (board[i][j].item >= 0 || board[i][j].item < 9){
+		else if (board[column][line].item >= 0 || board[column][line].item < 9){
 			return 0;
 		}	
 	}
 }
 
 /*
-This function place the bomb randomly on the board and update the case arround.
+This function place bombs randomly on the board and update the box arround.
+Empty is a board in which there are the indexes of the empties boxs of board. We fill empty with linear indexes from 0 to number of box of board. In order to have the line and the column related to the linear indexes we divid the index by width. The quotient is the line and the rest is the column. 
+Each time we place a bomb we are modifing empty. The box in which we place the bomb is remove from empty. Then the next time we chose a box for a bomb the box which was removed won't be in the choice.
 */
 
-void place_the_bomb(Case *board[] , int nmb_bomb , int size){
+void place_the_bomb(Box *board[] , int nmb_bomb , int height , int width){
 
 	int line = 0;
 	int column = 0;
 	int control_array = 0;
 	
+	int nb_slots = width*height;
+	int* empty = (int*)malloc(nb_slots*sizeof(int));
+	int nb = 0;
+	
+	for( int i = 0 ; i < nb_slots; i++) {
+	
+		line = i / width;
+		column = i % width;
+		
+		if ( board[column][line].item == 0 ) {
+			empty[nb] = i;
+			nb++;
+		}
+	}
+	
 	for(int i = 0 ; i < nmb_bomb ; i++){
 	
-		do{
-			line = rand()%size;
-			column = rand()%size;
+		int index = empty[rand()%nb];
+		
+		line = index / width;
+		column = index % width;
+		
+		board[column][line].item = 9;
+		
+		nb = 0;
+		
+		for( int i = 0 ; i < nb_slots; i++) {
+		
+			int pline = i/width;
+			int pcolumn = i%width;
 			
-		}while(board[line][column].item != 0);
-		
-		board[line][column].item = 9;
-		
+			if ( board[pcolumn][pline].item != 9 ) {
+				empty[nb] = i;
+				nb++;
+			}
+		}
+			
 		for(int pi = -1 ; pi <= 1 ; pi++){
 			for(int pj = -1 ; pj <= 1 ; pj++){
 					
 				if(pi != 0 || pj != 0){
 						
-					control_array = control(board , line + pi , column + pj , size);
+					control_array = control(board , column + pj , line + pi , height , width);
 							
 					if(control_array == 0){
-						board[line + pi][column + pj].item += 1; 
+						board[column + pj][line + pi].item += 1; 
 						
 					}
 				}
@@ -64,12 +93,12 @@ void place_the_bomb(Case *board[] , int nmb_bomb , int size){
 }
 
 /*
-This function look if the player has win. It's look over the board and if there is a case which is not a bomb and wich is not discovered it's return 0. Else it's return 1.
+This function checks if the player has won. It's look over the board and if there is a box which is not a bomb and wich is not discovered it's return 0. Else it's return 1.
 */
-int is_finish(Case *board[] , int size){
+int is_finish(Box *board[] , int height , int width){
 	
-	for(int i = 0 ; i < size ; i++){
-		for(int j = 0 ; j < size ; j++){
+	for(int i = 0 ; i < height ; i++){
+		for(int j = 0 ; j < width ; j++){
 		
 			if(board[i][j].state == -1){
 				if(board[i][j].item >= 0 && board[i][j].item < 9){
@@ -84,142 +113,78 @@ int is_finish(Case *board[] , int size){
 }
 
 /*
-This function ask to the the player if he wants to place a flag or discover a case and returns the decison
+This function ask to the the player if he wants to place a flag or discover a box and returns the decison
 */
 
-int game_set(int *line , int *column , int mode){
+int game_set(int *line , int *column , int height , int width){
 
 	char col; 
 	int lig = 0;
 	int decision;
 	int a;
 	
+	color("1");
+	
 	do{
-		color("1");
-		
 		printf("- Saisir 1 pour découvrir une case\n");
 		printf("- Saisir 2 pour placer un drapeau : ");
 		a = scanf("%d", &decision);
 		clean_stdin();
-		printf("\n");
-		
-		color("0");
 		
 	}while(decision != 1 && decision != 2 || a == 0);
 	
-	printf("\n");
+	printf("\n\n");
 	
-	if(mode == 0){
-	
-		if(decision == 1){
-			
-			do{
-				color("1");
-				
-				printf("Saisir les coordonnées de la case à découvrir (ex: B7) : ");
-				
-				scanf("%c", &col);
-				a = scanf("%d", &lig);
-				clean_stdin();
-				
-				color("0");
-				
-			}while(col > 73 || col < 65 || lig > 8 || lig < 0 || a == 0);
-			
-			col -= 65;
-			
-			*(line) = lig;
-			*(column) = col;
-					
-			printf("\n");
-			
-		}
+	if(decision == 1){
 		
-		else if(decision == 2){
+		do{
+			printf("Saisir les coordonnées de la case à découvrir (ex: B7) : ");
+			
+			scanf("%c", &col);
+			scanf("%d", &lig);
+			clean_stdin();
+			
+		}while(col > 65 + (width-1) || col < 65 || lig > height-1 || lig < 0);
 		
-			color("1");
-			
-			printf("(Pour retirer le drapeau cliquez sur la même case)\n\n");
-			
-			do{
-				printf("Saisir les coordonnées de la case dans laquelle placer le drapeau (ex: B7) : ");
+		col -= 65;
+		
+		*(line) = lig;
+		*(column) = col;
 				
-				scanf("%c", &col);
-				a = scanf("%d", &lig);
-				clean_stdin();
-				
-			}while(col > 73 || col < 65 || lig > 8 || lig < 0 || a == 0);
-			
-			col -= 65;
-			
-			*(line) = lig;
-			*(column) = col;
-					
-			printf("\n");
-			
-			color("0");
-		}
-		return decision;
+		printf("\n");
 	}
 	
-	else if(mode == 1){
-	
-		if(decision == 1){
-			
-			do{
-				color("1");
-				
-				printf("Saisir les coordonnées de la case à découvrir (ex: B7) : ");
-				
-				scanf("%c", &col);
-				scanf("%d", &lig);
-				clean_stdin();
-				
-				color("0");
-				
-			}while(col > 80 || col < 65 || lig > 15|| lig < 0);
-			
-			col -= 65;
-			
-			*(line) = lig;
-			*(column) = col;
-					
-			printf("\n");
-		}
+	else if(decision == 2){
 		
-		else if(decision == 2){
+		printf("(Pour retirer un drapeau cliquez sur la même case)\n\n");
+		
+		do{
+			printf("Saisir les coordonnées de la case dans laquelle placer le drapeau (ex: B7) : ");
 			
-			color("1");
+			scanf("%c", &col);
+			scanf("%d", &lig);
+			clean_stdin();
 			
-			printf("(Pour retirer le drapeau cliquez sur la même case)\n\n");
-			
-			do{
-				printf("Saisir les coordonnées de la case dans laquelle placer le drapeau (ex: B7) : ");
+		}while(col > 65 + (width-1) || col < 65 || lig > height-1 || lig < 0);
+		
+		col -= 65;
+		
+		*(line) = lig;
+		*(column) = col;
 				
-				scanf("%c", &col);
-				scanf("%d", &lig);
-				clean_stdin();
-				
-			}while(col > 80 || col < 65 || lig > 15 || lig < 0);
-			
-			col -= 65;
-			
-			*(line) = lig;
-			*(column) = col;
-					
-			printf("\n");
-			
-			color("0");
-		}
-		return decision;
+		printf("\n");
 	}
+	
+	color("0");
+	
+	return decision;
 }
 
 /*
 This function controls game turns. It tells to the player how many flags he has, then it shows the board with the player's decision and repeat this until the player lose or win.
 */
 
-int game(Case *board[] , int nmb_flag , int line , int column , int mode , int size){
+int game(Box *board[] , int nmb_flag , int line , int column , int mode , int height , int width){
 
 	int discover = 0;
 	int flag = 0;
@@ -228,39 +193,33 @@ int game(Case *board[] , int nmb_flag , int line , int column , int mode , int s
 
 	do{
 		color("1");
-		
 		printf("Nombre de drapeaux disponibles : %d\n\n", nmb_flag);
+		color("0");
 		
-		end = is_finish(board , size);
+		end = is_finish(board , width , height);
 		
 		if(end == 0){
 		
-			set_game = game_set(&line , &column , mode);
-		
+			set_game = game_set(&line , &column , height , width);
+			
 			if(set_game == 1){
 					
-				discover = discover_case(board , line , column , size);
+				discover = discover_box(board , column , line , height , width);
 				
 				if(discover == -1){
-					board[line][column].state = 1;
-					show_board(board , mode , size);
+					board[column][line].state = 1;
+					show_board(board , height , width);
 					end = 2;
-					
 				}
 					
 				else if(discover == -2){
 					color("31");
 					printf("Vous ne pouvez pas découvrir cette case !\n\n");
 					color("0");
-					show_board(board , mode , size);
+					show_board(board , height , width);
 				}
-				
-				else if(discover == 1){
-					show_board(board , mode , size);
-				}
-				
-				else if (discover == 0){
-					show_board(board , mode , size);
+				else{
+					show_board(board , height , width);
 				}
 			}
 				
@@ -268,22 +227,22 @@ int game(Case *board[] , int nmb_flag , int line , int column , int mode , int s
 				
 				if(nmb_flag > 0){
 				
-					flag = place_flag(board , line , column);
+					flag = place_flag(board , column , line);
 						
 					if(flag == -1){
 						color("31");
-						printf("Vous ne pouvez pas placer de drapeaux ici !\n\n");
+						printf("Vous ne pouvez pas placer de drapeau ici !\n\n");
 						color("0");
-						show_board(board , mode , size);
+						show_board(board , height , width);
 					}
 						
 					else if(flag == 0){
-						show_board(board , mode , size);
+						show_board(board , height , width);
 						nmb_flag -= 1;
 					}
 					
 					else if(flag == 1){
-						show_board(board , mode , size);
+						show_board(board , height , width);
 						nmb_flag += 1;
 					}	
 				}
@@ -292,20 +251,16 @@ int game(Case *board[] , int nmb_flag , int line , int column , int mode , int s
 					color("31");
 					printf("Vous n'avez plus de drapeaux disponibles\n");
 					color("0");
-					show_board(board , mode , size);
 				}
 			}
 		}
 		
-		color("0");
-		
 	}while( end != 1 && end != 2);
 	
 	return end;
-
 }
 
-int place_flag(Case *board[], int i , int j){
+int place_flag(Box *board[], int i , int j){
 
 	if(board[i][j].state == 1){
 		return -1;
@@ -327,13 +282,13 @@ int place_flag(Case *board[], int i , int j){
 }
 
 /*
-This function enable to discover a case. If the case which is selected is empty all the case arround, which are empty, are uncovered.
-If the case which is selected is a flag it return -2.
-If the case which is selected is already discovered it return 1.
-If the case which is selected is not discovered the function looks if the item is between 1 and 8 or if it's 0. If the item is between 1 and 8 the case is uncovered and if the item is 0 the case and all the case around which are not bomb are uncovered.
+This function enable to discover a box. If the box which is selected is empty all the box arround, which are empty, are uncovered.
+If the box which is selected is a flag it return -2.
+If the box which is selected is already discovered it return 1.
+If the box which is selected is not discovered the function looks if the item is between 1 and 8 or if it's 0. If the item is between 1 and 8 the box is uncovered and if the item is 0 the box and all the box around which are not bomb are uncovered.
 */
 
-int discover_case(Case *board[], int i , int j , int size){
+int discover_box(Box *board[], int i , int j , int height , int width){
 	
 	int control_array = 0; 
 	
@@ -366,10 +321,10 @@ int discover_case(Case *board[], int i , int j , int size){
 					
 					if(k != 0 || p != 0){
 							
-						control_array = control(board , i+k , j+p , size);
+						control_array = control(board , i+k , j+p , height , width);
 								
 						if(control_array == 0){
-							discover_case(board , i+k , j+p , size);
+							discover_box(board , i+k , j+p , height , width);
 						}
 					}
 				}

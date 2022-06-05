@@ -13,6 +13,6 @@ typedef struct{
 }Player;
 
 Player create_player();
-void update_high_score(Player player);
+void update_high_score(Player player, int height , int width , int nmb_bomb);
 
 #endif

@@ -4,10 +4,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include <time.h>
-#include"Case.h"
+#include"Box.h"
 
 char pion(int p);
-void show_board(Case *board[], int mode , int size);
+void show_board(Box *board[], int height , int width);
 void logo();
 void logo_result();
 void display_high_score();

@@ -2,7 +2,7 @@
 #include"display.h"
 #include"Player.h"
 #include"tools.h"
-#include"Case.h"
+#include"Box.h"
 #include"color.h"
 
 int main(void){
@@ -11,10 +11,12 @@ int main(void){
 	
 	Player player;
 	
-	int size = 0;
+	int width = 0;
+	int height = 0;
 	int mode = 0;
 	
 	int nmb_bomb = 0;
+	int nmb_max_bomb = 0;
 	int nmb_flag = 0;
 	
 	int set_game = 0;
@@ -29,8 +31,8 @@ int main(void){
 	int see = 0;
 	int a;
 	
-	Case **real_board;
-	Case *board;
+	Box **real_board;
+	Box *board;
 	
 	logo();
 	
@@ -39,30 +41,65 @@ int main(void){
 	mode = player.mode;
 	
 	if(mode == 0){
-		size = 9;
+		width = 9;
+		height = 9;
 		nmb_bomb = 10;
 	}
-	else{
-		size = 16;
+	else if(mode == 1){
+		width = 16;
+		height = 16;
 		nmb_bomb = 40; 
 	}
 	
-	//// 2D board declaration////
-	real_board = malloc(size*sizeof(Case*));
+	else if(mode == 2){
+	
+		color("1");
+	
+		do{
+			printf("Saisir la largeur de la grille (largeur max : 26) : ");
+			a = scanf("%d",&width);
+			clean_stdin();
+			
+			printf("Saisir la hauteur de la grille (hauteur max : 40) : ");
+			a = scanf("%d",&height);
+			clean_stdin();
+			
+			printf("\n");
+			
+		}while(width <= 0 || width > 26 || height <= 0 || height > 40 || a == 0);
+		
+		nmb_max_bomb = ((width * height)-(width * height)/10)- 1;
+		
+		do{
+			printf("Saisir le nombre de bombes (nombres de bombes max : %d) : ", nmb_max_bomb);
+			a = scanf("%d",&nmb_bomb);
+			clean_stdin();
+			
+			printf("\n");
+			
+		}while(nmb_bomb > nmb_max_bomb || nmb_bomb < 0 || a == 0);
+		
+		printf("Nombre de bombes : %d\n\n", nmb_bomb);
+		
+		color("0");
+	}
+	
+	//// 2D board allocation////
+	real_board = malloc(width*sizeof(Box*));
 	
 	if(real_board == NULL){
 		exit(1);
 	}
 	
-	for(int i = 0 ; i < size ; i++){
+	for(int i = 0 ; i < width ; i++){
 	
-		board = malloc(size * sizeof(Case));
+		board = malloc(height * sizeof(Box));
 		
 		if(board == NULL){
 			exit(1);
 		}
 		
-		for(int j = 0 ; j < size ; j++){
+		for(int j = 0 ; j < height ; j++){
 			board[j].item = 0;
 			board[j].state = -1;
 		}
@@ -71,18 +108,18 @@ int main(void){
 	}
 	////			
 	
-	place_the_bomb(real_board , nmb_bomb , size);
+	place_the_bomb(real_board , nmb_bomb , height , width);
 	nmb_flag = nmb_bomb;
 	
 	color("1");
 	printf("Voici la grille :\n\n");
 	color("0");
-	show_board(real_board , mode , size);
+	show_board(real_board, height , width);
 	
 	/*
-	for(int i = 0 ; i < size ; i++){
+	for(int i = 0 ; i < width ; i++){
 		
-		for(int j = 0 ; j < size ; j++){
+		for(int j = 0 ; j < height ; j++){
 			real_board[i][j].state = -1;
 		}
 	}
@@ -90,7 +127,7 @@ int main(void){
 	
 	time_t time_1 = time(NULL);
 	
-	real_game = game(real_board , nmb_flag , line , column , mode , size);
+	real_game = game(real_board , nmb_flag , line , column , mode , height , width);
 	
 	time_t time_2 = time(NULL);
 	
@@ -105,7 +142,7 @@ int main(void){
 		convert_score(&min , &score);
 		affiche_score(min, score);
 			
-		update_high_score(player);
+		update_high_score(player , width , height , nmb_bomb);
 	}
 	
 	do{

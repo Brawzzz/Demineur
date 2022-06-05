@@ -1,6 +1,6 @@
 #include"display.h"
 #include"tools.h"
-#include"Case.h"
+#include"Box.h"
 #include"color.h"
 
 /*
@@ -95,7 +95,7 @@ printf("  !!! !!!                  VVV           IIIIIIIIII     CCCCCCCCCCCCC   
 
 
 /*
-This function display the correct pictures of a case depending on the item and the state of the case
+This function display the correct pictures of a box depending on the item and the state of the box
 */
 
 char pion(int p){
@@ -115,122 +115,74 @@ char pion(int p){
 }
 
 /*
-This function display the correct board depending on the mode of the game and the state of the case
+This function display the correct board depending on the mode of the game and the state of the box
 */
 
-void show_board(Case *board[], int mode , int size){
+void show_board(Box *board[], int height , int width){
 
-	if(mode == 0){
+	printf("   ");
 	
-		printf("   A B C D E F G H I\n");
-		
-		for(int i = 0 ; i < size ; i++){
-		
-			printf("%d ",i);
-			
-			for(int j = 0 ; j < size ; j++){
-				
-				if(board[i][j].state == 1){
-				
-					if(board[i][j].item == 0){
-					
-						printf("|%c", pion(board[i][j].item));
-					}
-					
-					else if(board[i][j].item == 9){
-						
-						printf("|");
-						//color("5");
-						color("1");
-						color("31");
-						printf("%c", pion(board[i][j].item));
-						color("0");
-					}
-					
-					else{
-						printf("|");
-						color("1");
-						printf("%d", board[i][j].item);
-						color("0");
-					}
-				}
-				
-				else if(board[i][j].state == -1){
-				
-					printf("|%c", pion(board[i][j].state));
-				}
-				
-				else if(board[i][j].state == 2){
-					
-					printf("|");
-					color("32");
-					printf("%c", pion(board[i][j].state));
-					color("0");
-				}
-				
-			}
-			printf("|\n");
-		}
-	}
-	
-	else if(mode == 1){
-		
-		printf("   A B C D E F G H I J K L M N O P \n");
-		
-		for(int i = 0 ; i < size ; i++){
-		
-			if(i >= 10 ){
-				printf("%d",i);
-			}
-			else{
-				printf("%d ",i);
-			}
-
-			for(int j = 0 ; j < size ; j++){
-				
-				if(board[i][j].state == 1){
-					
-					if(board[i][j].item == 0){
-					
-						printf("|%c", pion(board[i][j].item));
-					}
-					
-					else if(board[i][j].item == 9){
-						
-						printf("|");
-						color("5");
-						color("1");
-						color("31");
-						printf("%c", pion(board[i][j].item));
-						color("0");
-					}
-					
-					else{
-						printf("|");
-						color("1");
-						printf("%d", board[i][j].item);
-						color("0");
-					}
-				}
-				
-				else if(board[i][j].state == -1){
-				
-					printf("|%c", pion(board[i][j].state));
-				}
-				
-				else if(board[i][j].state == 2){
-					
-					printf("|");
-					color("32");
-					printf("%c", pion(board[i][j].state));
-					color("0");
-				}
-			}
-			printf("|\n");
-		}
-	
+	for(int i = 0 ; i < width ; i++){
+		printf("%c ", 65 + i);	
 	}
 	printf("\n");
+	
+	for(int j = 0 ; j < height ; j++){
+	
+		if(j > 9){
+			printf("%d",j);
+		}
+		
+		else{
+			printf("%d ",j);
+		}
+		
+		for(int k = 0 ; k < width ; k++){
+			
+			if(board[k][j].state == 1){
+				
+				if(board[k][j].item == 0){
+				
+					printf("|%c", pion(board[k][j].item));
+				}
+				
+				else if(board[k][j].item == 9){
+					
+					printf("|");
+					//color("5");
+					color("1");
+					color("31");
+					printf("%c", pion(board[k][j].item));
+					color("0");
+				}
+				
+				else{
+					printf("|");
+					color("1");
+					printf("%d", board[k][j].item);
+					color("0");
+				}
+			}
+			
+			else if(board[k][j].state == -1){
+			
+				printf("|%c", pion(board[k][j].state));
+			}
+			
+			else if(board[k][j].state == 2){
+				
+				printf("|");
+				color("32");
+				printf("%c", pion(board[k][j].state));
+				color("0");
+			}
+			
+		}
+			
+		printf("|\n");
+	}
+	
+	printf("\n\n");
 }
 
 /*
