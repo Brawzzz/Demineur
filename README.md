@@ -1,4 +1,4 @@
-# Projet
+# Project
 School project
 
 This code is a school project. This is a demineur game.
